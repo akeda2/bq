@@ -120,7 +120,7 @@ _work_1() {
     rm -f $QDIR/q/0.*.-k
 
     # daemonize
-    nohup "$0" -w $QDIR &
+    nohup "$0" -w $QDIR >> $QDIR/nohup.out &
 
     # remind the user how many workers he has started, in case he forgot
     sleep 0.5   # wait for the other task to kick off
@@ -133,7 +133,7 @@ _work_1() {
     ti=0
     while [ $ti -lt $3 ]; do
 	rm -f $QDIR/q/0.*.-k
-	nohup "$0" -w $QDIR &
+	nohup "$0" -w $QDIR > $QDIR/nohup.out_$ti &
 	sleep 0.5   # wait for the other task to kick off
 	ti="$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
     done
