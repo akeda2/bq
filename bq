@@ -11,8 +11,10 @@
 
 # run "bq" to view the output directory using vifm, unless $BQ_FILEMANAGER is set
 
-# see README for more (e.g., using different queues, increasing/decreasing the
+# see bq.mkd for more (e.g., using different queues, increasing/decreasing the
 # number of workers in a queue, etc.)
+
+#Slightly modded by me (akeda) to always use "mc" instead of "vifm"
 
 # ----------------------------------------------------------------------
 
@@ -21,12 +23,25 @@ die() { echo "$@" >&2; exit 1; }
 [ "$1" = "-h" ] && {
     cat <<-EOF
 	Example usage:
-	    # start a worker
+	   #- Start a worker
 	    bq -w
-	    # submit a job
+            # Start a worker in another queue
+            bq -q queue -w
+            # Start n workers
+            bq (-q queue) -w -n n
+            # Report amount of current workers in queue
+            bq (-q queue) -g
+            # Stop a worker process
+            bq -k
+            # Stop all workers
+            bq -ka
+            # Stop all workers in a queue
+            bq -q queue -ka
+            #
+	   #- Submit a job
 	    bq some-command arg1 arg2 [...]
-	    # check status
-	    bq                              # uses vifm as the file manager
+	    # Check status
+	    bq                              # uses mc as the file manager
 	    export BQ_FILEMANAGER=mc; bq    # env var overrides default
 	    # you can only run one simple command; if you have a command with
 	    # shell meta characters (;, &, &&, ||, >, <, etc), do this:
@@ -44,7 +59,7 @@ TMP=/dev/shm
 # I doubt I will ever use multiple Qs, but it's easy enough to implement
 Q=default
 [ "$1" = "-q" ] && {
-    [ -z "$2" ] && die "-q needs a queue name"
+    [ -z "$2" ] || [[ "$2" == -* ]]&& die "-q needs a queue name"
     Q=$2; shift; shift
 }
 [ -z "$QDIR" ] && export QDIR=$TMP/bq-$USER-$Q
@@ -90,6 +105,7 @@ _work_1() {
         mv $ID.running.$$ $ID.exitcode=$ec
         [ "$ec" = "0" ] && mv $ID.* OK
         echo " # $ec" >> w/$$
+#        notify-send "`wc -l w/$$`" "`tail -1 w/$$`"
     fi
 }
 
@@ -112,6 +128,24 @@ _work_1() {
     exit 0
 }
 
+#Start several workers
+[ "$1" = "-w" ] && [ "$2" = "-n" ] && [ -n "$3" ] && {
+    ti=0
+    while [ $ti -lt $3 ]; do
+	rm -f $QDIR/q/0.*.-k
+	nohup "$0" -w $QDIR &
+	sleep 0.5   # wait for the other task to kick off
+	ti="$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
+    done
+    exit 0
+}
+
+[ "$1" = "-g" ] && [ -z "$2" ] && {
+    # remind the user how many workers he has started, in case he forgot
+    echo `cd $QDIR/w; ls | grep -v exited | wc -l` workers running
+    exit 0
+}
+
 # ----------------------------------------------------------------------
 # STOP A WORKER
 
@@ -120,6 +154,21 @@ _work_1() {
     # starting with a "0" assures that in an "ls" this file will come before
     # any normal task files (which all start with `date +%s`).  The contents
     # don't matter, since it won't be "executed" in the normal manner.
+    exit 0
+}
+
+# STOP ALL WORKERS
+how_many_w (){
+    echo `cd $QDIR/w; ls | grep -v exited | wc -l`
+}
+[ "$1" = "-ka" ] && [ -z "$2" ] && {
+    ta=$(how_many_w)
+    tk=0
+    while [ "$tk" -le "$ta" ]; do
+	touch $QDIR/q/0.$$$tk.-k
+	tk=$(( $tk + 1 ))
+#        sleep 1
+    done
     exit 0
 }
 
@@ -150,10 +199,10 @@ _work_1() {
 
         # handle exit, again using the "mv is atomic" principle
         [[ $ID == 0.*.-k ]] && {
-            mv q/$ID $ID.exiting
-            [ -f     $ID.exiting ] && {
+            mv q/$ID $ID.exiting.$$
+            [ -f     $ID.exiting.$$ ] && {
                 mv w/$$ w/$$.exited
-                rm $ID.exiting
+                rm $ID.exiting.$$
                 exit 0
             }
         }
@@ -170,7 +219,7 @@ _work_1() {
 # STATUS
 
 # examine the output directory using $BQ_FILEMANAGER (defaulting to vifm)
-[ -z "$1" ] && exec sh -c "${BQ_FILEMANAGER:-vifm} $QDIR"
+[ -z "$1" ] && exec sh -c "${BQ_FILEMANAGER:-mc} $QDIR"
 
 # ----------------------------------------------------------------------
 
