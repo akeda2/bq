@@ -6,3 +6,4 @@ for a in *.sh; do
 done
 
 [ $(command -v inotifywait) ] || sudo apt -y install inotify-tools
+[ $(command -v mc) ] || sudo apt -y install mc
