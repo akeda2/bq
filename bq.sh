@@ -142,7 +142,7 @@ _work_1() {
 
 [ "$1" = "-g" ] && [ -z "$2" ] && {
     # remind the user how many workers he has started, in case he forgot
-    echo `cd $QDIR/w; ls | grep -v exited | wc -l` workers running
+    echo `cd $QDIR/w; ls | grep -v exited | wc -l`
     exit 0
 }
 
