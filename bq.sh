@@ -67,6 +67,14 @@ mkdir -p $QDIR/w
 mkdir -p $QDIR/q
 mkdir -p $QDIR/OK
 
+# LOOK FOR OLD WORKERS
+for proc in "$QDIR"/w/*; do
+	[ -f "$proc" ] && [[ $(ps $(basename "$proc") | wc -l) < 2 ]] && {
+		echo "Found orphan worker: $proc"
+		rm "$proc"
+	}
+done
+
 # ----------------------------------------------------------------------
 # WORK 1 TASK
 
