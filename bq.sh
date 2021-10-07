@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # simple task queue; output files are in /dev/shm/bq-$USER.  Uses no locks;
 # use 'mv' command, which is atomic (within the same file system anyway) to
