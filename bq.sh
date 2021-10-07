@@ -69,12 +69,17 @@ mkdir -p $QDIR/OK
 
 # LOOK FOR OLD WORKERS
 for pros in $QDIR/w/*; do
-	[ -f "$pros" ] &&
+	if [ -f "$pros" ]; then
+	bname="${pros##*/}"
+        woext="${bname%.*}"
+        ext="${bname##*.}"
 ## [[ ! $pros = *.exited ]] ||
- [ $((ps ${pros##*/}) | wc -l) -lt 2 ] && {
-		echo "Found orphan worker: $pros"
-		rm "$pros"
-	}
+ 		#if [ $((ps ${pros##*/}) | wc -l) -lt 2 ]; then
+		if [ $ext != "exited" ] && [ $((ps "$woext") | wc -l) -lt 2 ]; then
+			echo "Found orphan worker: $pros"
+			rm "$pros"
+		fi
+	fi
 done
 
 # ----------------------------------------------------------------------
