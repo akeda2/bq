@@ -127,6 +127,12 @@ _work_1() {
 # ----------------------------------------------------------------------
 # START AND DAEMONISE A WORKER
 
+# How many workers are active?
+how_many_w (){
+    echo `cd $QDIR/w; ls | grep -v exited | wc -l`
+}
+
+
 # '-w' starts a worker; each worker runs one job at a time, so if you want
 # more jobs to run simultaneously, run this multiple times!
 [ "$1" = "-w" ] && [ -z "$2" ] && {
@@ -144,20 +150,31 @@ _work_1() {
 }
 
 #Start several workers
-[ "$1" = "-w" ] && [ "$2" = "-n" ] && [ -n "$3" ] && {
-    ti=0
-    while [ $ti -lt $3 ]; do
-	rm -f $QDIR/q/0.*.-k
-	nohup "$0" -w $QDIR > $QDIR/nohup.out_$ti &
-	sleep 0.5   # wait for the other task to kick off
-	ti="$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
-    done
-    exit 0
-}
+
+#If -n $3 is not specified, we count the cpu-cores
+if [ "$1" == "-w" ] && [ "$2" == "-n" ]; then
+	if [ -z "$3" ]; then
+		n="$(nproc)"
+		echo "n cpus = $n"
+	else
+		n="$3"
+	fi
+#    	ti=0
+	ti=$(how_many_w)  # "$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
+#	echo "$ti"
+    	while [ $ti -lt $n ]; do
+		rm -f $QDIR/q/0.*.-k
+		nohup "$0" -w $QDIR > $QDIR/nohup.out_$ti &
+		sleep 2   # wait for the other task to kick off
+		ti=$(how_many_w)  #"$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
+#		echo "$ti"
+    	done
+    	exit 0
+fi
 
 [ "$1" = "-g" ] && [ -z "$2" ] && {
     # remind the user how many workers he has started, in case he forgot
-    echo `cd $QDIR/w; ls | grep -v exited | wc -l`
+    echo $(how_many_w) `#cd $QDIR/w; ls | grep -v exited | wc -l`
     exit 0
 }
 
@@ -173,9 +190,7 @@ _work_1() {
 }
 
 # STOP ALL WORKERS
-how_many_w (){
-    echo `cd $QDIR/w; ls | grep -v exited | wc -l`
-}
+
 [ "$1" = "-ka" ] && [ -z "$2" ] && {
     ta=$(how_many_w)
     tk=0
