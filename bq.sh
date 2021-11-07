@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#This is a fork of sitaramc/bq
+
 # simple task queue; output files are in /dev/shm/bq-$USER.  Uses no locks;
 # use 'mv' command, which is atomic (within the same file system anyway) to
 # prevent contention.
@@ -22,25 +24,26 @@ die() { echo "$@" >&2; exit 1; }
 
 [ "$1" = "-h" ] && {
     cat <<-EOF
+_-:*'BQ'*:-_ Forked by akeda: https://github.com/akeda2/bq.git
 	Example usage:
-	   #- Start a worker
+	   Start a worker
 	    bq -w
-            # Start a worker in another queue
+           Start a worker in another queue
             bq -q queue -w
-            # Start n workers
+           Start n workers
             bq (-q queue) -w -n n
-            # Report amount of current workers in queue
+           Report amount of current workers in queue
             bq (-q queue) -g
-            # Stop a worker process
+           Stop a worker process
             bq -k
-            # Stop all workers
+           Stop all workers
             bq -ka
-            # Stop all workers in a queue
+           Stop all workers in a queue
             bq -q queue -ka
-            #
-	   #- Submit a job
+            
+	   Submit a job
 	    bq some-command arg1 arg2 [...]
-	    # Check status
+	   Check status
 	    bq                              # uses mc as the file manager
 	    export BQ_FILEMANAGER=mc; bq    # env var overrides default
 	    # you can only run one simple command; if you have a command with
@@ -70,11 +73,9 @@ mkdir -p $QDIR/OK
 # LOOK FOR OLD WORKERS
 for pros in $QDIR/w/*; do
 	if [ -f "$pros" ]; then
-	bname="${pros##*/}"
-        woext="${bname%.*}"
-        ext="${bname##*.}"
-## [[ ! $pros = *.exited ]] ||
- 		#if [ $((ps ${pros##*/}) | wc -l) -lt 2 ]; then
+		bname="${pros##*/}"
+        	woext="${bname%.*}"
+        	ext="${bname##*.}"
 		if [ $ext != "exited" ] && [ $((ps "$woext") | wc -l) -lt 2 ]; then
 			echo "Found orphan worker: $pros"
 			rm "$pros"
@@ -159,22 +160,21 @@ if [ "$1" == "-w" ] && [ "$2" == "-n" ]; then
 	else
 		n="$3"
 	fi
-#    	ti=0
-	ti=$(how_many_w)  # "$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
-#	echo "$ti"
+
+	ti=$(how_many_w)
+
     	while [ $ti -lt $n ]; do
 		rm -f $QDIR/q/0.*.-k
 		nohup "$0" -w $QDIR > $QDIR/nohup.out_$ti &
 		sleep 2   # wait for the other task to kick off
-		ti=$(how_many_w)  #"$(echo `cd $QDIR/w; ls | grep -v exited | wc -l`)"
-#		echo "$ti"
+		ti=$(how_many_w)
     	done
     	exit 0
 fi
 
 [ "$1" = "-g" ] && [ -z "$2" ] && {
     # remind the user how many workers he has started, in case he forgot
-    echo $(how_many_w) `#cd $QDIR/w; ls | grep -v exited | wc -l`
+    echo $(how_many_w)
     exit 0
 }
 
@@ -197,7 +197,6 @@ fi
     while [ "$tk" -le "$ta" ]; do
 	touch $QDIR/q/0.$$$tk.-k
 	tk=$(( $tk + 1 ))
-#        sleep 1
     done
     exit 0
 }
