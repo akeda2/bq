@@ -1,6 +1,16 @@
 #!/bin/bash
 
-#This is a fork of sitaramc/bq
+# This is a fork of sitaramc/bq (currently at https://github.com/sitaramc/notes)
+# Slightly modded to always use "mc" instead of "vifm", as well as adding
+# a few things to better suit my personal workflow:
+# Mainly:
+#		-g
+#		-ka
+#		-w -n n
+#
+# See help below for reference.
+
+# ----------------------------------------------------------------------
 
 # simple task queue; output files are in /dev/shm/bq-$USER.  Uses no locks;
 # use 'mv' command, which is atomic (within the same file system anyway) to
@@ -15,8 +25,6 @@
 
 # see bq.mkd for more (e.g., using different queues, increasing/decreasing the
 # number of workers in a queue, etc.)
-
-#Slightly modded by me (akeda) to always use "mc" instead of "vifm"
 
 # ----------------------------------------------------------------------
 
@@ -121,7 +129,9 @@ _work_1() {
         mv $ID.running.$$ $ID.exitcode=$ec
         [ "$ec" = "0" ] && mv $ID.* OK
         echo " # $ec" >> w/$$
-#        notify-send "`wc -l w/$$`" "`tail -1 w/$$`"
+#	if command -v notify-send &> /dev/null; then
+#       	notify-send "`wc -l w/$$`" "`tail -1 w/$$`"
+#	fi
     fi
 }
 
@@ -216,8 +226,12 @@ fi
         # if nothing is waiting in q, go to sleep, but use inotifywait so you
         # get woken up immediately if a new task lands
         [ -z "$ID" ] && {
-            inotifywait -q -t 60 -e create q >/dev/null
-            continue
+		if [ $(command -v inotifywait) ]; then
+			inotifywait -q -t 60 -e create q >/dev/null
+		else
+			sleep 60
+		fi
+		continue
             # whether we got an event or just timed out, we just go back round
         }
 
@@ -253,6 +267,16 @@ fi
 # ----------------------------------------------------------------------
 
 # some command was given; add it to the queue
-ID=`date +%s`.$$.${1//[^a-z0-9_.-]/}
+#ID=`date +%s`.$$.${1//[^a-z0-9_.-]/}
+# check for a task label via `bq -L label cmd ...`
+if [ "$1" == "-L" ]; then
+	[ -z "$3" ] && die "-L needs a task label"
+	LABEL=$2; shift; shift
+else
+	LABEL="$1"
+fi
+
+ID=`date +%s`.$$.${LABEL//[^a-z0-9_.-]/}
 pwd                 > $QDIR/q/$ID
 printf "%s\n" "$@" >> $QDIR/q/$ID
+echo "$ID"
