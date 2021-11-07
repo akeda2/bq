@@ -3,10 +3,12 @@
 # This is a fork of sitaramc/bq (currently at https://github.com/sitaramc/notes)
 # Slightly modded to always use "mc" instead of "vifm", as well as adding
 # a few things to better suit my personal workflow:
-# Mainly:
-#		-g
-#		-ka
-#		-w -n n
+#	Mainly:
+#		-g		Report nubmer of current workers
+#		-ka		Stop all current workers
+#		-w -n n		Set number of workers to 'n'
+#	
+#	These are all -q compatible
 #
 # See help below for reference.
 
@@ -35,25 +37,25 @@ die() { echo "$@" >&2; exit 1; }
 _-:*'BQ'*:-_ Forked by akeda: https://github.com/akeda2/bq.git
 	Example usage:
 	   Start a worker
-	    bq -w
+	      bq -w
            Start a worker in another queue
-            bq -q queue -w
+              bq -q queue -w
            Start n workers
-            bq (-q queue) -w -n n
+              bq (-q queue) -w -n n
            Report amount of current workers in queue
-            bq (-q queue) -g
+              bq (-q queue) -g
            Stop a worker process
-            bq -k
+              bq -k
            Stop all workers
-            bq -ka
+              bq -ka
            Stop all workers in a queue
-            bq -q queue -ka
+              bq -q queue -ka
             
 	   Submit a job
-	    bq some-command arg1 arg2 [...]
+	      bq some-command arg1 arg2 [...]
 	   Check status
-	    bq                              # uses mc as the file manager
-	    export BQ_FILEMANAGER=mc; bq    # env var overrides default
+	      bq                              # uses mc as the file manager
+	    # export BQ_FILEMANAGER=mc; bq    # env var overrides default
 	    # you can only run one simple command; if you have a command with
 	    # shell meta characters (;, &, &&, ||, >, <, etc), do this:
 	    bq bash -c 'echo hello; echo there >junk.\$RANDOM'
@@ -78,7 +80,7 @@ mkdir -p $QDIR/w
 mkdir -p $QDIR/q
 mkdir -p $QDIR/OK
 
-# LOOK FOR OLD WORKERS
+# CLEANUP OLD WORKER FILES
 for pros in $QDIR/w/*; do
 	if [ -f "$pros" ]; then
 		bname="${pros##*/}"
@@ -129,6 +131,8 @@ _work_1() {
         mv $ID.running.$$ $ID.exitcode=$ec
         [ "$ec" = "0" ] && mv $ID.* OK
         echo " # $ec" >> w/$$
+
+# Commented out for quiet operation
 #	if command -v notify-send &> /dev/null; then
 #       	notify-send "`wc -l w/$$`" "`tail -1 w/$$`"
 #	fi
