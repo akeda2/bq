@@ -271,7 +271,7 @@ fi
 # check for a task label via `bq -L label cmd ...`
 if [ "$1" == "-L" ]; then
 	[ -z "$3" ] && die "-L needs a task label"
-	LABEL=$2; shift; shift
+	LABEL="$2"; shift; shift
 else
 	LABEL="$1"
 fi
