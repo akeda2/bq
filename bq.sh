@@ -79,7 +79,7 @@ if [ "$1" = "-q" ]; then
 		die "-q name cannot start with a -"
 	fi
 	Q=$2; shift; shift
-	echo "Q = $Q"
+#	echo "Q = $Q"
 	export QDIR=$TMP/bq-$USER-$Q
 fi
 
@@ -89,7 +89,7 @@ fi
 mkdir -p $QDIR/w
 mkdir -p $QDIR/q
 mkdir -p $QDIR/OK
-echo "QDIR = $QDIR"
+#echo "QDIR = $QDIR"
 # CLEANUP OLD WORKER FILES
 for pros in $QDIR/w/*; do
 	if [ -f "$pros" ]; then
@@ -170,10 +170,10 @@ how_many_j (){
 
     # daemonize
 	if [[ $Q != default ]]; then
-		echo "Not default! $Q"
+#		echo "Not default! $Q"
 		nohup "$0" -q "$Q" -w $QDIR >> $QDIR/nohup.out &
 	else
-		echo "Default! $Q"
+#		echo "Default! $Q"
     		nohup "$0" -w $QDIR >> $QDIR/nohup.out &
 	fi
 
