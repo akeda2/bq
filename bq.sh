@@ -146,7 +146,10 @@ _work_1() {
 how_many_w (){
     echo `cd $QDIR/w; ls | grep -v exited | wc -l`
 }
-
+# How manuy jobs are left in queue?
+how_many_j (){
+    echo `cd $QDIR/q; ls | wc -l`
+}
 
 # '-w' starts a worker; each worker runs one job at a time, so if you want
 # more jobs to run simultaneously, run this multiple times!
@@ -191,7 +194,11 @@ fi
     echo $(how_many_w)
     exit 0
 }
-
+[ "$1" == "-j" ] && [ -z "$2" ] && {
+    # How many jobs are left in queue?
+    echo $(how_many_j)
+    exit 0
+}
 # ----------------------------------------------------------------------
 # STOP A WORKER
 
