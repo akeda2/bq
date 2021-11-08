@@ -71,15 +71,25 @@ TMP=/dev/shm
 
 # I doubt I will ever use multiple Qs, but it's easy enough to implement
 Q=default
-[ "$1" = "-q" ] && {
-    [ -z "$2" ] || [[ "$2" == -* ]]&& die "-q needs a queue name"
-    Q=$2; shift; shift
-}
+if [ "$1" = "-q" ]; then
+	if [ -z "$2" ]; then
+		die "-q needs a queue name"
+	fi
+	if [[ "$2" == -* ]]; then
+		die "-q name cannot start with a -"
+	fi
+	Q=$2; shift; shift
+	echo "Q = $Q"
+	export QDIR=$TMP/bq-$USER-$Q
+fi
+
+# Checking exported env variable. This would be set by -q, if -q is set.
 [ -z "$QDIR" ] && export QDIR=$TMP/bq-$USER-$Q
+
 mkdir -p $QDIR/w
 mkdir -p $QDIR/q
 mkdir -p $QDIR/OK
-
+echo "QDIR = $QDIR"
 # CLEANUP OLD WORKER FILES
 for pros in $QDIR/w/*; do
 	if [ -f "$pros" ]; then
@@ -154,12 +164,18 @@ how_many_j (){
 # '-w' starts a worker; each worker runs one job at a time, so if you want
 # more jobs to run simultaneously, run this multiple times!
 [ "$1" = "-w" ] && [ -z "$2" ] && {
-
+		
     # if the user is starting a worker, any existing kill commands don't apply
     rm -f $QDIR/q/0.*.-k
 
     # daemonize
-    nohup "$0" -w $QDIR >> $QDIR/nohup.out &
+	if [[ $Q != default ]]; then
+		echo "Not default! $Q"
+		nohup "$0" -q "$Q" -w $QDIR >> $QDIR/nohup.out &
+	else
+		echo "Default! $Q"
+    		nohup "$0" -w $QDIR >> $QDIR/nohup.out &
+	fi
 
     # remind the user how many workers he has started, in case he forgot
     sleep 0.5   # wait for the other task to kick off
