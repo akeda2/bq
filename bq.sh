@@ -66,7 +66,13 @@ _-:*'BQ'*:-_ Forked by akeda: https://github.com/akeda2/bq.git
 # ----------------------------------------------------------------------
 # SETUP
 
-TMP=/dev/shm
+# Look for directory (in my case, a symlink to /dev/shm)
+if [ -d "/bq" ]; then
+	TMP="/bq"
+else
+	TMP=/dev/shm
+fi
+# If above gives nothing, use /tmp instead
 [ -d $TMP ] || TMP=/tmp
 
 # I doubt I will ever use multiple Qs, but it's easy enough to implement
@@ -86,6 +92,7 @@ fi
 # Checking exported env variable. This would be set by -q, if -q is set.
 [ -z "$QDIR" ] && export QDIR=$TMP/bq-$USER-$Q
 
+chmod 0750 $QDIR
 mkdir -p $QDIR/w
 mkdir -p $QDIR/q
 mkdir -p $QDIR/OK
