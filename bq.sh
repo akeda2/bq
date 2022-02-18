@@ -7,8 +7,11 @@
 #		-g		Report nubmer of current workers
 #		-ka		Stop all current workers
 #		-w -n n		Set number of workers to 'n'
-#	
+#		-j		Report number of jobs left in queue
+#
 #	These are all -q compatible
+#       With this fork it is also possible to generate a queue with jobs
+#       from another queue.
 #
 # See help below for reference.
 
@@ -184,7 +187,7 @@ how_many_j (){
     		nohup "$0" -w $QDIR >> $QDIR/nohup.out &
 	fi
 
-    # remind the user how many workers he has started, in case he forgot
+    # remind the user how many workers we have started, in case we forgot
     sleep 0.5   # wait for the other task to kick off
     echo `cd $QDIR/w; ls | grep -v exited | wc -l` workers running
     exit 0
@@ -213,7 +216,7 @@ if [ "$1" == "-w" ] && [ "$2" == "-n" ]; then
 fi
 
 [ "$1" = "-g" ] && [ -z "$2" ] && {
-    # remind the user how many workers he has started, in case he forgot
+    # remind the user how many workers we have started, in case we forgot
     echo $(how_many_w)
     exit 0
 }
